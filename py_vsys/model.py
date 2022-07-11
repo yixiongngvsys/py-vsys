@@ -174,6 +174,65 @@ class Seed(Str):
             if not w in wd.WORDS_SET:
                 raise ValueError(f"Data in {cls_name} contains invalid words")
 
+    @staticmethod
+    def strengthen_password(password: str, rounds: int=5000) -> str:
+        """
+        strengthenPassword strengthens the given password by hashing the given rounds.
+
+        Args:
+            password (str): The password to strengthen.
+            rounds (int): The number of strengthen rounds.
+
+        Returns:
+            str: The strengthened password.
+
+        """
+
+        while rounds-1:
+            password = hs.sha256_hash(password.encode()).hex()
+            rounds -= 1
+        return hs.sha256_hash(password.encode())
+
+    def encrypt(self, password: str, encryption_rounds: int) -> EncryptedSeed:
+        """
+        encrypt encrypts the seed with given password by given encryptionRounds.
+
+        Args:
+            password (str): The password used when encrypting seed.
+            encryption_rounds (int): The number of encryption round when encrypting seed.
+
+        Returns:
+            EncryptedSeed: The encrypted seed.
+
+        """
+
+        if ( not password or type(password).__name__ != 'str'):
+            raise Exception("Password is required")
+        password = self.strengthen_password(password, encryption_rounds)
+        return EncryptedSeed(hs.aesEncrypt(self.data, password))
+
+class EncryptedSeed(Str):
+    
+    def validate(self) -> None:
+        super().validate()
+
+    def decrypt(self, password: str, encryption_rounds: int) -> Seed:
+        """
+        decrypt decrypts the seed with given password by given encryptionRounds.
+
+        Args:
+            password (str): The password used when encrypting seed previously.
+            encryption_rounds (int): The number of encryption round when encrypting seed previously.
+
+        Returns:
+            Seed: The decrypted seed.
+
+        """
+        if ( not password or type(password).__name__ != 'str'):
+            raise Exception("Password is required") 
+        password = Seed.strengthen_password(password, encryption_rounds)
+        return Seed(hs.aesDecrypt(self.data, password))
+
 
 class B58Str(Str):
     """

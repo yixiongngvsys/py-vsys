@@ -6,6 +6,8 @@ from __future__ import annotations
 
 
 import hashlib
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 from . import keccak
 
@@ -47,3 +49,36 @@ def blake2b_hash(b: bytes) -> bytes:
         bytes: The hash result
     """
     return hashlib.blake2b(b, digest_size=32).digest()
+
+def aesEncrypt(data: str, key: str) -> str:
+    """
+    aesEncrypt encrypts the given data in AES.
+
+    Args:
+    data (str): The data to encrypt.
+    key (str): The key used to encrypt data.
+
+    Returns:
+        str: The encryption result
+    """
+
+    BS = AES.block_size
+    data = pad(data.encode(), BS)
+    aes = AES.new(key, AES.MODE_ECB)
+    return aes.encrypt(data).hex()
+
+def aesDecrypt(data: str, key: str) -> str:
+    """
+    aesDecrypt decrypts the given data encrypted by AES.
+
+    Args:
+    data (str): The data to decrypt.
+    key (str): The key used to decrypt data.
+
+    Returns:
+        str: The decryption result    
+    """
+
+    BS = AES.block_size
+    aes = AES.new(key, AES.MODE_ECB)
+    return unpad(aes.decrypt(bytes.fromhex(data)), BS).decode()
